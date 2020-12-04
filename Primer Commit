@@ -1,0 +1,74 @@
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
+#include <LiquidCrystal.h>
+#define DHTPIN 14 
+#define DHTTYPE    DHT22  
+
+DHT_Unified dht(DHTPIN, DHTTYPE);
+uint32_t delayMS;
+
+const int rs = 1, en = 4, d4 = 2, d5 = 16, d6 = 12, d7 = 13;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+void setup() {
+  Serial.begin(9600);
+  lcd.begin(16, 2);
+  dht.begin();
+  Serial.println(F("DHTxx Unified Sensor Example"));
+  sensor_t sensor;
+  dht.temperature().getSensor(&sensor);
+  Serial.println(F("------------------------------------"));
+  Serial.println(F("Temperature Sensor"));
+  Serial.print  (F("Sensor Type: ")); Serial.println(sensor.name);
+  Serial.print  (F("Driver Ver:  ")); Serial.println(sensor.version);
+  Serial.print  (F("Unique ID:   ")); Serial.println(sensor.sensor_id);
+  Serial.print  (F("Max Value:   ")); Serial.print(sensor.max_value); Serial.println(F("°C"));
+  Serial.print  (F("Min Value:   ")); Serial.print(sensor.min_value); Serial.println(F("°C"));
+  Serial.print  (F("Resolution:  ")); Serial.print(sensor.resolution); Serial.println(F("°C"));
+  Serial.println(F("------------------------------------"));
+  dht.humidity().getSensor(&sensor);
+  Serial.println(F("Humidity Sensor"));
+  Serial.print  (F("Sensor Type: ")); Serial.println(sensor.name);
+  Serial.print  (F("Driver Ver:  ")); Serial.println(sensor.version);
+  Serial.print  (F("Unique ID:   ")); Serial.println(sensor.sensor_id);
+  Serial.print  (F("Max Value:   ")); Serial.print(sensor.max_value); Serial.println(F("%"));
+  Serial.print  (F("Min Value:   ")); Serial.print(sensor.min_value); Serial.println(F("%"));
+  Serial.print  (F("Resolution:  ")); Serial.print(sensor.resolution); Serial.println(F("%"));
+  Serial.println(F("------------------------------------"));
+  delayMS = sensor.min_delay / 1000;
+
+}
+
+void loop() {
+  int lectura = analogRead(A0);
+  int lecturaPorcentaje = map(lectura, 1024, 0, 0, 100);
+  delay(delayMS);
+  sensors_event_t event;
+  dht.temperature().getEvent(&event);
+     
+  if (isnan(event.temperature)) {
+    lcd.setCursor(0,0);
+    lcd.print(F(" N/C Temp/Hum  "));
+  }
+  else {
+    lcd.setCursor(0,0);
+    lcd.print("T: ");
+    lcd.print(event.temperature);
+    lcd.print(" Celc");
+  }
+  dht.humidity().getEvent(&event);
+  if (isnan(event.relative_humidity)) {
+
+  }
+  else {
+    lcd.setCursor(0,1);
+    lcd.print("HA:");
+    lcd.print(event.relative_humidity-(event.relative_humidity/100));
+    lcd.print("% ");
+    lcd.print("HT:");
+    lcd.print(lecturaPorcentaje);
+    lcd.print("%");
+    delay(1000);
+  }
+}
